@@ -55,7 +55,7 @@ const NotificationRealtime = {
     
     async checkForNewNotifications() {
         try {
-            const response = await fetch('/notifications/check-new/', {
+            const response = await fetch(`/notifications/check-new/?last_id=${this.lastNotificationId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

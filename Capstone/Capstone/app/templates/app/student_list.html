@@ -1035,29 +1035,9 @@ input:focus {
 
     <script>
        document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DEBUGGING CASE ID ISSUE ===');
     
-    // First, let's check all dropdowns on the page
-    const dropdowns = document.querySelectorAll(".case-status-dropdown");
-    console.log('Found dropdowns:', dropdowns.length);
-    
-    dropdowns.forEach((dropdown, index) => {
-        console.log(`Dropdown ${index}:`, dropdown);
-        console.log(`  - dataset:`, dropdown.dataset);
-        console.log(`  - data-case-id:`, dropdown.getAttribute('data-case-id'));
-        console.log(`  - case_id from dataset:`, dropdown.dataset.caseId);
-        console.log(`  - case_id from dataset snake_case:`, dropdown.dataset.case_id);
-        console.log('  - All attributes:', dropdown.attributes);
-        
-        // List all attributes
-        for (let attr of dropdown.attributes) {
-            console.log(`    ${attr.name}: ${attr.value}`);
-        }
-    });
-
-    // FIXED: Robust case ID extraction function
+    // Robust case ID extraction function
     function getCaseId(element) {
-        // Try multiple approaches to get case ID
         const methods = [
             () => element.getAttribute('data-case-id'),
             () => element.dataset.caseId,
@@ -1076,34 +1056,25 @@ input:focus {
             }
         }
         
-        console.error('❌ Could not extract valid case ID from element:', element);
+        console.error('Could not extract valid case ID from element:', element);
         return null;
     }
 
-    // ADD THE MISSING FUNCTION HERE
+    // Toggle date/time inputs visibility
     function toggleDateTimeInputs(case_id, status) {
-        console.log(`=== TOGGLE DATE TIME INPUTS ===`);
-        console.log('Case ID:', case_id);
-        console.log('Status:', status);
-        
         if (!case_id) {
-            console.error('❌ Invalid case_id in toggleDateTimeInputs');
+            console.error('Invalid case_id in toggleDateTimeInputs');
             return;
         }
         
         const dateInput = document.querySelector(`.case-scheduled-date[data-case-id="${case_id}"]`);
         const timeInput = document.querySelector(`.case-scheduled-time[data-case-id="${case_id}"]`);
         
-        console.log('Date input found:', !!dateInput);
-        console.log('Time input found:', !!timeInput);
-        
-        // Show inputs for 'in_progress' status, hide for others
         const shouldShow = status === 'in_progress';
         
         if (dateInput) {
             dateInput.style.display = shouldShow ? 'block' : 'none';
             dateInput.required = shouldShow;
-            // Also toggle parent container if it exists
             const dateContainer = dateInput.closest('.date-time-container') || dateInput.parentElement;
             if (dateContainer && dateContainer !== dateInput) {
                 dateContainer.style.display = shouldShow ? 'block' : 'none';
@@ -1113,60 +1084,42 @@ input:focus {
         if (timeInput) {
             timeInput.style.display = shouldShow ? 'block' : 'none';
             timeInput.required = shouldShow;
-            // Also toggle parent container if it exists
             const timeContainer = timeInput.closest('.date-time-container') || timeInput.parentElement;
             if (timeContainer && timeContainer !== timeInput) {
                 timeContainer.style.display = shouldShow ? 'block' : 'none';
             }
         }
-        
-        console.log('Inputs visibility set to:', shouldShow ? 'visible' : 'hidden');
     }
 
-    // Function to update UI after status change
+    // Update UI after status change
     function updateUIAfterStatusChange(case_id, status) {
-        console.log(`Updating UI for case ${case_id} with status ${status}`);
-        
         if (!case_id) {
-            console.error('❌ Invalid case_id in updateUIAfterStatusChange');
+            console.error('Invalid case_id in updateUIAfterStatusChange');
             return;
         }
         
-        // Update any status displays
         const statusDisplays = document.querySelectorAll(`[data-case-id="${case_id}"] .status-display`);
         statusDisplays.forEach(display => {
             display.textContent = status.replace('_', ' ').toUpperCase();
             display.className = `status-display status-${status}`;
         });
         
-        // Toggle date/time inputs
         toggleDateTimeInputs(case_id, status);
     }
     
-    // FIXED: Listen for changes on the status dropdown with proper case ID handling
+    // Listen for changes on the status dropdown
     document.querySelectorAll(".case-status-dropdown").forEach((dropdown, index) => {
         dropdown.addEventListener("change", function() {
-            console.log(`=== DROPDOWN ${index} CHANGED ===`);
-            console.log('This element:', this);
-            console.log('Dataset:', this.dataset);
-            
-            // Use the robust case ID extraction
             const case_id = getCaseId(this);
             const newStatus = this.value;
             
-            console.log('Final case_id:', case_id);
-            console.log('New status:', newStatus);
-            
             if (!case_id) {
-                console.error('❌ CASE ID IS INVALID OR NOT FOUND!');
+                console.error('CASE ID IS INVALID OR NOT FOUND!');
                 console.error('Dropdown HTML:', this.outerHTML);
                 alert('Error: Case ID not found. Please check the HTML structure.');
                 return;
             }
             
-            console.log('✅ Case ID found:', case_id);
-            
-            // Show or hide date and time inputs based on status
             toggleDateTimeInputs(case_id, newStatus);
             
             const dateInput = document.querySelector(`.case-scheduled-date[data-case-id="${case_id}"]`);
@@ -1175,34 +1128,11 @@ input:focus {
             const scheduledDate = dateInput ? dateInput.value : '';
             const scheduledTime = timeInput ? timeInput.value : '';
             
-            // Send data to backend
             updateCaseStatus(case_id, newStatus, scheduledDate, scheduledTime);
         });
     });
     
-    // Also check if the HTML is being rendered correctly
-    console.log('=== HTML STRUCTURE CHECK ===');
-    const allCaseElements = document.querySelectorAll('[data-case-id]');
-    console.log('All elements with data-case-id:', allCaseElements.length);
-    
-    allCaseElements.forEach((element, index) => {
-        const caseId = element.getAttribute('data-case-id');
-        console.log(`Element ${index}:`, element.tagName, caseId);
-        
-        // Validate case IDs
-        if (!caseId || caseId === 'undefined' || caseId === 'null') {
-            console.warn(`⚠️ Element ${index} has invalid case ID:`, caseId);
-        }
-    });
-    
-    // Check if Django template is rendering correctly
-    console.log('=== TEMPLATE RENDERING CHECK ===');
-    const sampleDropdown = document.querySelector('.case-status-dropdown');
-    if (sampleDropdown) {
-        console.log('Sample dropdown HTML:', sampleDropdown.outerHTML);
-    }
-
-    // Enhanced debugging for CSRF token
+    // Enhanced CSRF token retrieval
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -1215,21 +1145,13 @@ input:focus {
                 }
             }
         }
-        console.log('CSRF Token retrieved:', cookieValue ? 'Found' : 'Not found');
         return cookieValue;
     }
 
-    // FIXED: Enhanced updateCaseStatus function with validation
+    // Update case status via API
     function updateCaseStatus(case_id, status, scheduledDate, scheduledTime) {
-        console.log('=== UPDATE CASE STATUS DEBUG ===');
-        console.log('Case ID:', case_id);
-        console.log('Status:', status);
-        console.log('Scheduled Date:', scheduledDate);
-        console.log('Scheduled Time:', scheduledTime);
-        
-        // Validate case_id before making request
         if (!case_id || isNaN(case_id) || case_id <= 0) {
-            console.error('❌ Invalid case ID, aborting request:', case_id);
+            console.error('Invalid case ID, aborting request:', case_id);
             alert('Error: Invalid case ID. Cannot update status.');
             return;
         }
@@ -1248,47 +1170,35 @@ input:focus {
         }
 
         const url = `/update_case_status/${case_id}/`;
-        console.log('Request URL:', url);
         
         const requestData = {
             status: status,
             scheduled_date: scheduledDate || '',
             scheduled_time: scheduledTime || '',
         };
-        console.log('Request Data:', requestData);
-        
-        const requestHeaders = {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-        };
-        console.log('Request Headers:', requestHeaders);
         
         fetch(url, {
             method: "POST",
-            headers: requestHeaders,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
             body: JSON.stringify(requestData),
         })
         .then(response => {
-            console.log('Response Status:', response.status);
-            console.log('Response OK:', response.ok);
-            console.log('Response Headers:', [...response.headers.entries()]);
-            
             if (!response.ok) {
                 return response.text().then(text => {
-                    console.error('Error Response Text:', text);
                     throw new Error(`HTTP ${response.status}: ${text}`);
                 });
             }
             return response.json();
         })
         .then(data => {
-            console.log('Success Response:', data);
             if (loadingSpan) {
                 loadingSpan.style.display = 'none';
             }
             
             if (data.success) {
-                console.log("Case updated successfully!");
                 updateUIAfterStatusChange(case_id, status);
                 showNotification('Case status updated successfully!', 'success');
             } else {
@@ -1298,10 +1208,7 @@ input:focus {
             }
         })
         .catch(error => {
-            console.error('=== NETWORK ERROR DEBUG ===');
-            console.error('Error Type:', error.constructor.name);
-            console.error('Error Message:', error.message);
-            console.error('Full Error:', error);
+            console.error('Network error:', error.message);
             
             if (loadingSpan) {
                 loadingSpan.style.display = 'none';
@@ -1364,7 +1271,7 @@ input:focus {
         }, 3000);
     }
 
-    // FIXED: Initialize date/time inputs visibility on page load
+    // Initialize date/time inputs visibility on page load
     document.querySelectorAll('.case-scheduled-date').forEach(input => {
         const case_id = getCaseId(input);
         if (case_id) {
@@ -1376,13 +1283,13 @@ input:focus {
         }
     });
 
-    // FIXED: Handle date input changes with proper case ID extraction
+    // Handle date input changes
     document.querySelectorAll(".case-scheduled-date").forEach(dateInput => {
         dateInput.addEventListener("change", function () {
             const case_id = getCaseId(this);
             
             if (!case_id) {
-                console.error('❌ Invalid case ID in date input change handler');
+                console.error('Invalid case ID in date input change handler');
                 return;
             }
             
@@ -1397,13 +1304,13 @@ input:focus {
         });
     });
 
-    // FIXED: Handle time input changes with proper case ID extraction
+    // Handle time input changes
     document.querySelectorAll(".case-scheduled-time").forEach(timeInput => {
         timeInput.addEventListener("change", function () {
             const case_id = getCaseId(this);
             
             if (!case_id) {
-                console.error('❌ Invalid case ID in time input change handler');
+                console.error('Invalid case ID in time input change handler');
                 return;
             }
             
