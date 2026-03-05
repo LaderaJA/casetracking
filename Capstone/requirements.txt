@@ -1,0 +1,15 @@
+# Django Framework
+Django==5.2.8
+
+# PostgreSQL Database Adapter
+psycopg2-binary==2.9.9
+
+# Social Authentication
+social-auth-app-django==5.4.0
+
+# Additional utilities
+python-decouple==3.8
+Pillow==10.2.0
+
+# Development tools (optional)
+django-debug-toolbar==4.2.0
